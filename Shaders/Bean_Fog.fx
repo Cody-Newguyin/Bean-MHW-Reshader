@@ -1,5 +1,6 @@
 #include "ReShade.fxh"
 #include "ReShadeUI.fxh"
+#include "Bean_Common.fxh"
 
 uniform int _FogMode < 
     ui_type = "combo";
@@ -41,7 +42,7 @@ float3 FogPass(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_T
 {
 	float3 color = tex2D(ReShade::BackBuffer, texcoord).rgb;
     float depth = ReShade::GetLinearizedDepth(texcoord);
-    float viewDistance = max(0.0, depth * _ProjectionFar - _ProjectionNear);
+    float viewDistance = max(0.0f, depth * _ProjectionFar - _ProjectionNear);
 
     float fogFactor = 0.0f;
 
@@ -49,13 +50,13 @@ float3 FogPass(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_T
         fogFactor = viewDistance / _ProjectionFar;
     } else if (_FogMode == 1) {
         fogFactor = viewDistance * (_Density / log(2));
-        fogFactor = 1.0 - exp2(-fogFactor);
+        fogFactor = 1.0f - exp2(-fogFactor);
     } else if (_FogMode == 2) {
         fogFactor = viewDistance * (_Density / sqrt(log(2)));
-        fogFactor = 1.0 - exp2(-fogFactor * fogFactor);
+        fogFactor = 1.0f - exp2(-fogFactor * fogFactor);
     }
 
-    if (depth > 0.99 && !_SampleSky) {
+    if (depth > 0.99f && !_SampleSky) {
         fogFactor = 1.0f;
     }
 
