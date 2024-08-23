@@ -37,6 +37,13 @@ uniform float _Delta <
     ui_type = "drag";
 > = 1.0f;
 
+uniform bool _Debug <
+    ui_category_closed = true;
+    ui_category = "Advanced settings";
+    ui_label = "Debug";
+    ui_tooltip = "Show values in prefiltered";
+> = false;
+
 texture2D HalfTex {
     Width = BUFFER_WIDTH / 2;
     Height = BUFFER_HEIGHT / 2;
@@ -179,6 +186,10 @@ float4 PS_Bloom(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_
         color = color / max(0.01f, (1.0f - (bloom - 0.001f)));
     }
     
+    if (_Debug) {
+        return float4(bloom, pixel.a);
+    }
+
     return float4(color, pixel.a);
 }
 
