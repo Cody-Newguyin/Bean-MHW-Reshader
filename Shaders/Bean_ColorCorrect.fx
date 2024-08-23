@@ -41,7 +41,7 @@ uniform float3 _Saturation <
 
 float3 PS_ColorCorrect(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target
 {
-	float3 color = tex2D(ReShade::BackBuffer, texcoord).rgb;
+	float3 color = tex2D(Common::BeanBuffer, texcoord).rgb;
 
     color = color * _Exposure;
 
@@ -59,7 +59,14 @@ technique Bean_ColorCorrect
 {
 	pass
 	{
+        RenderTarget = Common::BeanBufferTexTemp;
 		VertexShader = PostProcessVS;
 		PixelShader = PS_ColorCorrect;
 	}
+    pass End
+    {
+        RenderTarget = Common::BeanBufferTex;
+        VertexShader = PostProcessVS;
+		PixelShader = Common::PS_EndPass;
+    }
 }

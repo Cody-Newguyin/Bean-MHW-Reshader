@@ -288,7 +288,14 @@ technique Bean_Bloom
     #endif
 	pass
 	{
+        RenderTarget = Common::BeanBufferTexTemp;
 		VertexShader = PostProcessVS;
 		PixelShader = PS_Bloom;
 	}
+    pass End
+    {
+        RenderTarget = Common::BeanBufferTex;
+        VertexShader = PostProcessVS;
+		PixelShader = Common::PS_EndPass;
+    }
 }

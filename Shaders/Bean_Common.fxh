@@ -2,6 +2,7 @@
 
 namespace Common {
 
+// Shaders should set render target to BeanBufferTex and add PS_EndPass to the end
 // HDR Buffer to pass between shaders
 texture2D BeanBufferTex {
     Format = RGBA16F;
@@ -9,6 +10,14 @@ texture2D BeanBufferTex {
     Height = BUFFER_HEIGHT;
 };
 sampler2D BeanBuffer { Texture = BeanBufferTex; };
+// Another HDR Buffer to ping pong back 
+texture2D BeanBufferTexTemp {
+    Format = RGBA16F;
+    Width  = BUFFER_WIDTH;
+    Height = BUFFER_HEIGHT;
+};
+sampler2D BeanBufferTemp { Texture = BeanBufferTexTemp; };
+float3 PS_EndPass(float4 position : SV_POSITION, float2 texcoord : TEXCOORD) : SV_TARGET { return tex2D(BeanBufferTemp, texcoord).rgb; }
 
 // Photometric 
 float Luminance(float3 color) {
