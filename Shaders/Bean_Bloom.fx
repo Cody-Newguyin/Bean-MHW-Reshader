@@ -108,46 +108,47 @@ float3 Prefilter(float3 color) {
     return color * contribution;
 }
 
-float3 Scale(sampler2D texSampler, float2 texcoord, int sizeFactor, float delta) {
+float4 Scale(sampler2D texSampler, float2 texcoord, int sizeFactor, float delta) {
     float2 texelSize = float2(1.0f / (BUFFER_WIDTH / sizeFactor), 1.0f / (BUFFER_HEIGHT / sizeFactor));
-    float3 color = tex2D(texSampler, texcoord).rgb;
-    return color;
+    float4 pixel = tex2D(Common::BeanBuffer, texcoord);
+	float3 color = pixel.rgb;
+    return float4(color, pixel.a);
 }
 
 // Add downscale passes based on BEAN_NUM_DOWNSCALES, see the passes
 #if BEAN_NUM_DOWNSCALES > 1
-float3 PS_DownScale1(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Half, texcoord, 2, _Delta); }
+float4 PS_DownScale1(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Half, texcoord, 2, _Delta); }
 #if BEAN_NUM_DOWNSCALES > 2
-float3 PS_DownScale2(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Quarter, texcoord, 4, _Delta); }
+float4 PS_DownScale2(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Quarter, texcoord, 4, _Delta); }
 #if BEAN_NUM_DOWNSCALES > 3
-float3 PS_DownScale3(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Eighth, texcoord, 8, _Delta); }
+float4 PS_DownScale3(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Eighth, texcoord, 8, _Delta); }
 #if BEAN_NUM_DOWNSCALES > 4
-float3 PS_DownScale4(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Sixteenth, texcoord, 16, _Delta); }
+float4 PS_DownScale4(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Sixteenth, texcoord, 16, _Delta); }
 #if BEAN_NUM_DOWNSCALES > 5
-float3 PS_DownScale5(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(ThirtySecondth, texcoord, 32, _Delta); }
+float4 PS_DownScale5(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(ThirtySecondth, texcoord, 32, _Delta); }
 #if BEAN_NUM_DOWNSCALES > 6
-float3 PS_DownScale6(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(SixtyFourth, texcoord, 64, _Delta); }
+float4 PS_DownScale6(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(SixtyFourth, texcoord, 64, _Delta); }
 #if BEAN_NUM_DOWNSCALES > 7
-float3 PS_DownScale7(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(OneTwentyEighth, texcoord, 128, _Delta); }
+float4 PS_DownScale7(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(OneTwentyEighth, texcoord, 128, _Delta); }
 
-float3 PS_UpScale7(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(TwoFiftySixth, texcoord, 256, _Delta); }
+float4 PS_UpScale7(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(TwoFiftySixth, texcoord, 256, _Delta); }
 #endif
-float3 PS_UpScale6(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(OneTwentyEighth, texcoord, 128, _Delta); }
+float4 PS_UpScale6(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(OneTwentyEighth, texcoord, 128, _Delta); }
 #endif
-float3 PS_UpScale5(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(SixtyFourth, texcoord, 64, _Delta); }
+float4 PS_UpScale5(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(SixtyFourth, texcoord, 64, _Delta); }
 #endif
-float3 PS_UpScale4(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(ThirtySecondth, texcoord, 32, _Delta); }
+float4 PS_UpScale4(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(ThirtySecondth, texcoord, 32, _Delta); }
 #endif
-float3 PS_UpScale3(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Sixteenth, texcoord, 16, _Delta); }
+float4 PS_UpScale3(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Sixteenth, texcoord, 16, _Delta); }
 #endif
-float3 PS_UpScale2(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Eighth, texcoord, 8, _Delta); }
+float4 PS_UpScale2(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Eighth, texcoord, 8, _Delta); }
 #endif
-float3 PS_UpScale1(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Quarter, texcoord, 4, _Delta); }
+float4 PS_UpScale1(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Quarter, texcoord, 4, _Delta); }
 #endif
 
-float3 PS_PreFilter(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target
+float4 PS_PreFilter(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target
 {
-    float3 color = tex2D(ReShade::BackBuffer, texcoord).rgb;
+    float3 color = tex2D(Common::BeanBuffer, texcoord).rgb;
     float2 texelSize = float2(BUFFER_RCP_WIDTH, BUFFER_RCP_HEIGHT);
 
     // Ignore Skybox and edges between foreground and skybox
@@ -159,12 +160,13 @@ float3 PS_PreFilter(float4 position : SV_Position, float2 texcoord : TexCoord) :
     SkyMask *= leftDepth * rightDepth * upDepth * downDepth;
 
     color = Prefilter(pow(abs(color), 2.2f)) * SkyMask;
-	return color;
+	return float4(color, 1.0f);
 }
 
-float3 PS_Bloom(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target
+float4 PS_Bloom(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target
 {
-	float3 color = tex2D(ReShade::BackBuffer, texcoord).rgb;
+    float4 pixel = tex2D(Common::BeanBuffer, texcoord);
+	float3 color = pixel.rgb;
 
     float3 bloom = tex2D(Half, texcoord).rgb;
     bloom = _Intensity * pow(abs(bloom), 1.0f / 2.2f);
@@ -177,7 +179,7 @@ float3 PS_Bloom(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_
         color = color / max(0.01f, (1.0f - (bloom - 0.001f)));
     }
     
-    return color;
+    return float4(color, pixel.a);
 }
 
 technique Bean_Bloom

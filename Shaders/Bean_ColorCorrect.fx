@@ -39,9 +39,10 @@ uniform float3 _Saturation <
     ui_type = "drag";
 > = 1.0f;
 
-float3 PS_ColorCorrect(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target
+float4 PS_ColorCorrect(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target
 {
-	float3 color = tex2D(Common::BeanBuffer, texcoord).rgb;
+    float4 pixel = tex2D(Common::BeanBuffer, texcoord);
+	float3 color = pixel.rgb;
 
     color = color * _Exposure;
 
@@ -52,7 +53,7 @@ float3 PS_ColorCorrect(float4 position : SV_Position, float2 texcoord : TexCoord
     color = max(0.0f, color);
 
     color = lerp(Common::Luminance(color), color, _Saturation);
-	return color;
+	return float4(color, pixel.a);
 }
 
 technique Bean_ColorCorrect

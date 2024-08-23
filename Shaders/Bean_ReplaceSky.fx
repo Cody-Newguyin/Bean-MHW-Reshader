@@ -41,9 +41,10 @@ texture2D SkyTex <
 };
 sampler2D SkySampler { Texture = SkyTex; };
 
-float3 PS_ReplaceSky(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target
+float4 PS_ReplaceSky(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target
 {
-	float3 color = tex2D(ReShade::BackBuffer, texcoord).rgb;
+	float4 pixel = tex2D(Common::BeanBuffer, texcoord);
+	float3 color = pixel.rgb;
 
     float depth = ReShade::GetLinearizedDepth(texcoord);
 
@@ -54,7 +55,7 @@ float3 PS_ReplaceSky(float4 position : SV_Position, float2 texcoord : TexCoord) 
         color = lerp(color, layer.rgb, layer.a * _Blend);
     }
 
-	return color;
+	return float4(color, pixel.a);
 }
 
 technique Bean_ReplaceSky

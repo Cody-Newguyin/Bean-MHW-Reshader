@@ -8,9 +8,10 @@ uniform int _GreyScaleMode <
                 "Digital\0";
 > = 0;
 
-float3 PS_GreyScale(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target
+float4 PS_GreyScale(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target
 {
-	float3 color = tex2D(ReShade::BackBuffer, texcoord).rgb;
+	float4 pixel = tex2D(Common::BeanBuffer, texcoord);
+	float3 color = pixel.rgb;
 
     float luminance = 0.0f;
     if (_GreyScaleMode == 0) {
@@ -20,7 +21,7 @@ float3 PS_GreyScale(float4 position : SV_Position, float2 texcoord : TexCoord) :
     }
 
     color = float3(luminance, luminance, luminance);
-	return color;
+	return float4(color, pixel.a);
 }
 
 technique Bean_GreyScale

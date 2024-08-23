@@ -37,9 +37,10 @@ uniform float _ProjectionFar <
     ui_type = "slider";
 > = 1000.0f;
 
-float3 PS_Fog(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target
+float4 PS_Fog(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target
 {
-	float3 color = tex2D(ReShade::BackBuffer, texcoord).rgb;
+	float4 pixel = tex2D(Common::BeanBuffer, texcoord);
+	float3 color = pixel.rgb;
     float depth = ReShade::GetLinearizedDepth(texcoord);
     float viewDistance = max(0.0f, depth * _ProjectionFar - _ProjectionNear);
 
@@ -60,7 +61,7 @@ float3 PS_Fog(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Ta
     }
 
     color = lerp(color, _FogColor, saturate(fogFactor));
-	return color;
+	return float4(color, pixel.a);
 }
 
 technique Bean_Fog

@@ -17,7 +17,7 @@ texture2D BeanBufferTexTemp {
     Height = BUFFER_HEIGHT;
 };
 sampler2D BeanBufferTemp { Texture = BeanBufferTexTemp; };
-float3 PS_EndPass(float4 position : SV_POSITION, float2 texcoord : TEXCOORD) : SV_TARGET { return tex2D(BeanBufferTemp, texcoord).rgb; }
+float4 PS_EndPass(float4 position : SV_POSITION, float2 texcoord : TEXCOORD) : SV_TARGET { return tex2D(BeanBufferTemp, texcoord); }
 
 // Photometric 
 float Luminance(float3 color) {
