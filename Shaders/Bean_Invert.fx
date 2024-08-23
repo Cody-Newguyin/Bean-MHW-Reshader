@@ -1,5 +1,5 @@
 #include "ReShade.fxh"
-#include "ReShadeUI.fxh"
+#include "Bean_Common.fxh"
 
 float3 PS_Invert(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target
 {

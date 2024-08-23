@@ -1,5 +1,4 @@
 #include "ReShade.fxh"
-#include "ReShadeUI.fxh"
 #include "Bean_Common.fxh"
 
 uniform int _GreyScaleMode < 

@@ -1,21 +1,14 @@
 #include "ReShade.fxh"
-#include "ReShadeUI.fxh"
 #include "Bean_Common.fxh"
 
 #ifndef SKY_SOURCE
 #define SKY_SOURCE "crash1.png"
 #endif
 #ifndef SKY_SIZE_X
-#define SKY_SIZE_X 799
+#define SKY_SIZE_X BUFFER_WIDTH
 #endif
 #ifndef SKY_SIZE_Y
-#define SKY_SIZE_Y 540
-#endif
-
-#if SKY_SINGLECHANNEL
-    #define TEXFORMAT R8
-#else
-    #define TEXFORMAT RGBA8
+#define SKY_SIZE_Y BUFFER_HEIGHT
 #endif
 
 uniform float2 _Position < 
@@ -39,20 +32,14 @@ uniform float _Blend <
     ui_step = (1.0 / 255.0); // for slider and drag
 > = 1.0;
 
-texture SkyTex <
+texture2D SkyTex <
     source = SKY_SOURCE;
 > {
-    Format = TEXFORMAT;
+    Format = RGBA8;
     Width  = SKY_SIZE_X;
     Height = SKY_SIZE_Y;
 };
-
-sampler SkySampler
-{
-    Texture = SkyTex;
-    AddressU = REPEAT;
-    AddressV = REPEAT;
-};
+sampler2D SkySampler { Texture = SkyTex; };
 
 float3 PS_ReplaceSky(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target
 {
@@ -64,7 +51,7 @@ float3 PS_ReplaceSky(float4 position : SV_Position, float2 texcoord : TexCoord) 
         const float2 pixelSize = 1.0 / (float2(SKY_SIZE_X, SKY_SIZE_Y) * _Scale / BUFFER_SCREEN_SIZE);
         const float4 layer     = tex2D(SkySampler, texcoord * pixelSize + _Position * (1.0 - pixelSize));
 
-        color = lerp(color, layer, layer.a * _Blend);
+        color = lerp(color, layer.rgb, layer.a * _Blend);
     }
 
 	return color;

@@ -2,15 +2,24 @@
 
 namespace Common {
 
+// HDR Buffer to pass between shaders
+texture2D BeanBufferTex {
+    Format = RGBA16F;
+    Width  = BUFFER_WIDTH;
+    Height = BUFFER_HEIGHT;
+};
+sampler2D BeanBuffer { Texture = BeanBufferTex; };
+
+// Photometric 
 float Luminance(float3 color) {
     return dot(color, float3(0.2127f, 0.7152f, 0.0722f));
 }
-
+// Digital
 float LuminanceAlt(float3 color) {
     return dot(color, float3(0.299f, 0.587f, 0.114f));
 }
 
-//https://docs.unity3d.com/Packages/com.unity.shadergraph@6.9/manual/White-Balance-Node.html
+// https://docs.unity3d.com/Packages/com.unity.shadergraph@6.9/manual/White-Balance-Node.html
 float3 WhiteBalance(float3 col, float temp, float tint) {
     float t1 = temp * 10.0f / 6.0f;
     float t2 = tint * 10.0f / 6.0f;

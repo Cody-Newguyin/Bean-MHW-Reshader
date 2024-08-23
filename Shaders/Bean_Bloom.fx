@@ -1,5 +1,4 @@
 #include "ReShade.fxh"
-#include "ReShadeUI.fxh"
 #include "Bean_Common.fxh"
 
 #ifndef BEAN_NUM_DOWNSCALES
@@ -95,6 +94,7 @@ texture2D TwoFiftySixthTex {
     Format = RGBA16F;
 }; sampler2D TwoFiftySixth { Texture = TwoFiftySixthTex; };
 
+// https://catlikecoding.com/unity/tutorials/advanced-rendering/bloom/
 float3 Prefilter(float3 color) {
     float luminance = Common::Luminance(color);
 
@@ -114,31 +114,43 @@ float3 Scale(sampler2D texSampler, float2 texcoord, int sizeFactor, float delta)
     return color;
 }
 
+// Add downscale passes based on BEAN_NUM_DOWNSCALES, see the passes
+#if BEAN_NUM_DOWNSCALES > 1
 float3 PS_DownScale1(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Half, texcoord, 2, _Delta); }
-
+#if BEAN_NUM_DOWNSCALES > 2
 float3 PS_DownScale2(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Quarter, texcoord, 4, _Delta); }
-
+#if BEAN_NUM_DOWNSCALES > 3
 float3 PS_DownScale3(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Eighth, texcoord, 8, _Delta); }
-
+#if BEAN_NUM_DOWNSCALES > 4
 float3 PS_DownScale4(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Sixteenth, texcoord, 16, _Delta); }
+#if BEAN_NUM_DOWNSCALES > 5
+float3 PS_DownScale5(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(ThirtySecondth, texcoord, 32, _Delta); }
+#if BEAN_NUM_DOWNSCALES > 6
+float3 PS_DownScale6(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(SixtyFourth, texcoord, 64, _Delta); }
+#if BEAN_NUM_DOWNSCALES > 7
+float3 PS_DownScale7(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(OneTwentyEighth, texcoord, 128, _Delta); }
 
+float3 PS_UpScale7(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(TwoFiftySixth, texcoord, 256, _Delta); }
+#endif
+float3 PS_UpScale6(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(OneTwentyEighth, texcoord, 128, _Delta); }
+#endif
+float3 PS_UpScale5(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(SixtyFourth, texcoord, 64, _Delta); }
+#endif
 float3 PS_UpScale4(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(ThirtySecondth, texcoord, 32, _Delta); }
-
+#endif
 float3 PS_UpScale3(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Sixteenth, texcoord, 16, _Delta); }
-
+#endif
 float3 PS_UpScale2(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Eighth, texcoord, 8, _Delta); }
-
+#endif
 float3 PS_UpScale1(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Quarter, texcoord, 4, _Delta); }
-
-
-
-
+#endif
 
 float3 PS_PreFilter(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target
 {
     float3 color = tex2D(ReShade::BackBuffer, texcoord).rgb;
     float2 texelSize = float2(BUFFER_RCP_WIDTH, BUFFER_RCP_HEIGHT);
 
+    // Ignore Skybox and edges between foreground and skybox
     bool SkyMask = ReShade::GetLinearizedDepth(texcoord) < 0.98f;
     bool leftDepth = ReShade::GetLinearizedDepth(texcoord + texelSize * float2(-1, 0)) < 1.0f;
     bool rightDepth = ReShade::GetLinearizedDepth(texcoord + texelSize * float2(1, 0)) < 1.0f;
@@ -176,54 +188,104 @@ technique Bean_Bloom
         VertexShader = PostProcessVS;
 		PixelShader = PS_PreFilter;
     }
+    #if BEAN_NUM_DOWNSCALES > 1
     pass Down1
     {
         RenderTarget = QuarterTex;
         VertexShader = PostProcessVS;
 	    PixelShader = PS_DownScale1;
     } 
+    #if BEAN_NUM_DOWNSCALES > 2
     pass Down2
     {
         RenderTarget = EighthTex;
         VertexShader = PostProcessVS;
 	    PixelShader = PS_DownScale2;
     } 
+    #if BEAN_NUM_DOWNSCALES > 3
     pass Down3
     {
         RenderTarget = SixteenthTex;
         VertexShader = PostProcessVS;
 	    PixelShader = PS_DownScale3;
     } 
+    #if BEAN_NUM_DOWNSCALES > 4
     pass Down4
     {
         RenderTarget = ThirtySecondthTex;
         VertexShader = PostProcessVS;
 	    PixelShader = PS_DownScale4;
     } 
+    #if BEAN_NUM_DOWNSCALES > 5
+    pass Down5
+    {
+        RenderTarget = SixtyFourthTex;
+        VertexShader = PostProcessVS;
+	    PixelShader = PS_DownScale5;
+    } 
+    #if BEAN_NUM_DOWNSCALES > 6
+    pass Down6
+    {
+        RenderTarget = OneTwentyEighthTex;
+        VertexShader = PostProcessVS;
+	    PixelShader = PS_DownScale6;
+    } 
+    #if BEAN_NUM_DOWNSCALES > 7
+    pass Down7
+    {
+        RenderTarget = TwoFiftySixthTex;
+        VertexShader = PostProcessVS;
+	    PixelShader = PS_DownScale7;
+    } 
+    pass Up7
+    {
+        RenderTarget = OneTwentyEighthTex;
+        VertexShader = PostProcessVS;
+	    PixelShader = PS_UpScale7;
+    }
+    #endif
+    pass Up6
+    {
+        RenderTarget = SixtyFourthTex;
+        VertexShader = PostProcessVS;
+	    PixelShader = PS_UpScale6;
+    }
+    #endif
+    pass Up5
+    {
+        RenderTarget = ThirtySecondthTex;
+        VertexShader = PostProcessVS;
+	    PixelShader = PS_UpScale5;
+    }
+    #endif
     pass Up4
     {
         RenderTarget = SixteenthTex;
         VertexShader = PostProcessVS;
 	    PixelShader = PS_UpScale4;
     }
+    #endif
     pass Up3
     {
         RenderTarget = EighthTex;
         VertexShader = PostProcessVS;
 	    PixelShader = PS_UpScale3;
     }
+    #endif
     pass Up2
     {
         RenderTarget = QuarterTex;
         VertexShader = PostProcessVS;
 	    PixelShader = PS_UpScale2;
     }
+    #endif
     pass Up1
     {
         RenderTarget = HalfTex;
         VertexShader = PostProcessVS;
 	    PixelShader = PS_UpScale1;
     }
+    #endif
 	pass
 	{
 		VertexShader = PostProcessVS;
