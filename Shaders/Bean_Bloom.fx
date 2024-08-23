@@ -5,6 +5,15 @@
     #define BEAN_NUM_DOWNSCALES 0
 #endif
 
+uniform int _SampleMode <
+    ui_type = "combo";
+    ui_label = "Sample mode";
+    ui_items = "Point\0"
+               "Box\0"
+               "Box13\0";
+> = 0;
+
+
 uniform int _BlendMode <
     ui_type = "combo";
     ui_label = "Blend mode";
@@ -31,7 +40,25 @@ uniform float _Intensity <
     ui_type = "drag";
 > = 1.0f;
 
+uniform bool _UseKarisAvg <
+    ui_category = "Advanced settings";
+    ui_category_closed = true;
+    ui_label = "Use Karis Average";
+    ui_tooltip = "Suppress very bright outlying hdr values to prevent fireflies (pixel flickering)";
+> = true;
+
+uniform float _LuminanceBias <
+    ui_category = "Advanced settings";
+    ui_category_closed = true;
+    ui_min = 0.0f; ui_max = 2.0f;
+    ui_label = "Luminance Bias";
+    ui_type = "drag";
+    ui_tooltip = "Luminance bias for karis average";
+> = 1.0f;
+
 uniform float _Delta <
+    ui_category = "Advanced settings";
+    ui_category_closed = true;
     ui_min = 0.01f; ui_max = 2.0f;
     ui_label = "Sampling Delta";
     ui_type = "drag";
@@ -115,47 +142,151 @@ float3 Prefilter(float3 color) {
     return color * contribution;
 }
 
-float4 Scale(sampler2D texSampler, float2 texcoord, int sizeFactor, float delta) {
+float3 SampleBox(sampler2D texSampler, float2 texcoord, float2 texelSize, float delta) {
+    float4 o = texelSize.xyxy * float2(-delta, delta).xxyy;
+    float3 s1 = tex2D(texSampler, texcoord + o.xy).rgb;
+    float3 s2 = tex2D(texSampler, texcoord + o.zy).rgb;
+    float3 s3 = tex2D(texSampler, texcoord + o.xw).rgb;
+    float3 s4 = tex2D(texSampler, texcoord + o.zw).rgb;
+
+    float3 s = 0.0f;
+    if (_UseKarisAvg) {
+        float s1w = rcp(Common::MaxLuminance(s1) + _LuminanceBias);
+        float s2w = rcp(Common::MaxLuminance(s2) + _LuminanceBias);
+        float s3w = rcp(Common::MaxLuminance(s3) + _LuminanceBias);
+        float s4w = rcp(Common::MaxLuminance(s4) + _LuminanceBias);
+        s = s1 * s1w + s2 * s2w + s3 * s3w + s4 * s4w;
+        
+        return s * rcp(s1w + s2w + s3w + s4w);
+    }
+    else {
+        s = s1 + s2 + s3 + s4;
+        return s * 0.25f;
+    }
+}
+
+// https://www.iryoku.com/next-generation-post-processing-in-call-of-duty-advanced-warfare/
+float3 SampleBox13Down(sampler2D texSampler, float2 texcoord, float2 texelSize, float delta) {
+    float x = texelSize.x * delta;
+    float y = texelSize.y * delta;
+
+    float3 a = tex2D(texSampler, float2(texcoord.x - 2*x, texcoord.y + 2*y)).rgb;
+    float3 b = tex2D(texSampler, float2(texcoord.x,       texcoord.y + 2*y)).rgb;
+    float3 c = tex2D(texSampler, float2(texcoord.x + 2*x, texcoord.y + 2*y)).rgb;
+
+    float3 d = tex2D(texSampler, float2(texcoord.x - 2*x, texcoord.y)).rgb;
+    float3 e = tex2D(texSampler, float2(texcoord.x,       texcoord.y)).rgb;
+    float3 f = tex2D(texSampler, float2(texcoord.x + 2*x, texcoord.y)).rgb;
+
+    float3 g = tex2D(texSampler, float2(texcoord.x - 2*x, texcoord.y - 2*y)).rgb;
+    float3 h = tex2D(texSampler, float2(texcoord.x,       texcoord.y - 2*y)).rgb;
+    float3 i = tex2D(texSampler, float2(texcoord.x + 2*x, texcoord.y - 2*y)).rgb;
+
+    float3 j = tex2D(texSampler, float2(texcoord.x - x, texcoord.y + y)).rgb;
+    float3 k = tex2D(texSampler, float2(texcoord.x + x, texcoord.y + y)).rgb;
+    float3 l = tex2D(texSampler, float2(texcoord.x - x, texcoord.y - y)).rgb;
+    float3 m = tex2D(texSampler, float2(texcoord.x + x, texcoord.y - y)).rgb;
+
+    float3 s1 = (e)       * 0.125;
+    float3 s2 = (a+c+g+i) * 0.03125;
+    float3 s3 = (b+d+f+h) * 0.0625;
+    float3 s4 = (j+k+l+m) * 0.125;
+
+    float3 s = 0.0f;
+    if (_UseKarisAvg) {
+        float s1w = rcp(Common::MaxLuminance(s1) + _LuminanceBias);
+        float s2w = rcp(Common::MaxLuminance(s2) + _LuminanceBias);
+        float s3w = rcp(Common::MaxLuminance(s3) + _LuminanceBias);
+        float s4w = rcp(Common::MaxLuminance(s4) + _LuminanceBias);
+        s = s1 * s1w + s2 * s2w + s3 * s3w + s4 * s4w;
+        return s * rcp(s1w + s2w + s3w + s4w);
+    }
+    else {
+        s = s1 + s2 + s3 + s4;
+        return s;
+    }
+}
+
+float3 SampleBox13Up(sampler2D texSampler, float2 texcoord, float2 texelSize, float delta) {
+    float x = texelSize.x * delta;
+    float y = texelSize.y * delta;
+
+    float3 a = tex2D(texSampler, float2(texcoord.x - x, texcoord.y + y)).rgb;
+    float3 b = tex2D(texSampler, float2(texcoord.x,     texcoord.y + y)).rgb;
+    float3 c = tex2D(texSampler, float2(texcoord.x + x, texcoord.y + y)).rgb;
+
+    float3 d = tex2D(texSampler, float2(texcoord.x - x, texcoord.y)).rgb;
+    float3 e = tex2D(texSampler, float2(texcoord.x,     texcoord.y)).rgb;
+    float3 f = tex2D(texSampler, float2(texcoord.x + x, texcoord.y)).rgb;
+
+    float3 g = tex2D(texSampler, float2(texcoord.x - x, texcoord.y - y)).rgb;
+    float3 h = tex2D(texSampler, float2(texcoord.x,     texcoord.y - y)).rgb;
+    float3 i = tex2D(texSampler, float2(texcoord.x + x, texcoord.y - y)).rgb;
+
+
+    float3 s = 0.0f;
+    s += e*4.0;
+    s += (b+d+f+h)*2.0;
+    s += (a+c+g+i);
+    s *= 1.0 / 16.0;
+
+    return s;
+}
+
+float4 Scale(sampler2D texSampler, float2 texcoord, int sizeFactor, float delta, bool down ) {
     float2 texelSize = float2(1.0f / (BUFFER_WIDTH / sizeFactor), 1.0f / (BUFFER_HEIGHT / sizeFactor));
-    float4 pixel = tex2D(Common::BeanBuffer, texcoord);
-	float3 color = pixel.rgb;
+    float4 pixel = tex2D(texSampler, texcoord);
+	float3 color;
+
+    if (_SampleMode == 0) {
+        color = pixel.rgb;
+    } else if (_SampleMode == 1) {
+        color = SampleBox(texSampler, texcoord, texelSize, delta);
+    } else if (_SampleMode == 2) {
+        if (down == 1) {
+            color = SampleBox13Down(texSampler, texcoord, texelSize, delta);
+        } else {
+            color = SampleBox13Up(texSampler, texcoord, texelSize, delta);
+        }
+    }
+
     return float4(color, pixel.a);
 }
 
 // Add downscale passes based on BEAN_NUM_DOWNSCALES, see the passes
 #if BEAN_NUM_DOWNSCALES > 1
-float4 PS_DownScale1(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Half, texcoord, 2, _Delta); }
+float4 PS_DownScale1(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Half, texcoord, 2, _Delta, 1); }
 #if BEAN_NUM_DOWNSCALES > 2
-float4 PS_DownScale2(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Quarter, texcoord, 4, _Delta); }
+float4 PS_DownScale2(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Quarter, texcoord, 4, _Delta, 1); }
 #if BEAN_NUM_DOWNSCALES > 3
-float4 PS_DownScale3(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Eighth, texcoord, 8, _Delta); }
+float4 PS_DownScale3(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Eighth, texcoord, 8, _Delta, 1); }
 #if BEAN_NUM_DOWNSCALES > 4
-float4 PS_DownScale4(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Sixteenth, texcoord, 16, _Delta); }
+float4 PS_DownScale4(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Sixteenth, texcoord, 16, _Delta, 1); }
 #if BEAN_NUM_DOWNSCALES > 5
-float4 PS_DownScale5(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(ThirtySecondth, texcoord, 32, _Delta); }
+float4 PS_DownScale5(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(ThirtySecondth, texcoord, 32, _Delta, 1); }
 #if BEAN_NUM_DOWNSCALES > 6
-float4 PS_DownScale6(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(SixtyFourth, texcoord, 64, _Delta); }
+float4 PS_DownScale6(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(SixtyFourth, texcoord, 64, _Delta, 1); }
 #if BEAN_NUM_DOWNSCALES > 7
-float4 PS_DownScale7(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(OneTwentyEighth, texcoord, 128, _Delta); }
+float4 PS_DownScale7(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(OneTwentyEighth, texcoord, 128, _Delta, 1); }
 
-float4 PS_UpScale7(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(TwoFiftySixth, texcoord, 256, _Delta); }
+float4 PS_UpScale7(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(TwoFiftySixth, texcoord, 256, _Delta, 0); }
 #endif
-float4 PS_UpScale6(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(OneTwentyEighth, texcoord, 128, _Delta); }
+float4 PS_UpScale6(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(OneTwentyEighth, texcoord, 128, _Delta, 0); }
 #endif
-float4 PS_UpScale5(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(SixtyFourth, texcoord, 64, _Delta); }
+float4 PS_UpScale5(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(SixtyFourth, texcoord, 64, _Delta, 0); }
 #endif
-float4 PS_UpScale4(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(ThirtySecondth, texcoord, 32, _Delta); }
+float4 PS_UpScale4(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(ThirtySecondth, texcoord, 32, _Delta, 0); }
 #endif
-float4 PS_UpScale3(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Sixteenth, texcoord, 16, _Delta); }
+float4 PS_UpScale3(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Sixteenth, texcoord, 16, _Delta, 0); }
 #endif
-float4 PS_UpScale2(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Eighth, texcoord, 8, _Delta); }
+float4 PS_UpScale2(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Eighth, texcoord, 8, _Delta, 0); }
 #endif
-float4 PS_UpScale1(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Quarter, texcoord, 4, _Delta); }
+float4 PS_UpScale1(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target { return Scale(Quarter, texcoord, 4, _Delta, 0); }
 #endif
 
 float4 PS_PreFilter(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target
 {
-    float3 color = tex2D(Common::BeanBuffer, texcoord).rgb;
+    float3 color = Scale(Common::BeanBuffer, texcoord, 1, 1.0f, 1).rgb;
     float2 texelSize = float2(BUFFER_RCP_WIDTH, BUFFER_RCP_HEIGHT);
 
     // Ignore Skybox and edges between foreground and skybox
@@ -175,7 +306,7 @@ float4 PS_Bloom(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_
     float4 pixel = tex2D(Common::BeanBuffer, texcoord);
 	float3 color = pixel.rgb;
 
-    float3 bloom = tex2D(Half, texcoord).rgb;
+    float3 bloom = Scale(Half, texcoord, 2, 1.0f, 0).rgb;
     bloom = _Intensity * pow(abs(bloom), 1.0f / 2.2f);
 
     if (_BlendMode == 0) {

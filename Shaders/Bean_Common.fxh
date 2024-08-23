@@ -28,6 +28,10 @@ float LuminanceAlt(float3 color) {
     return dot(color, float3(0.299f, 0.587f, 0.114f));
 }
 
+float MaxLuminance(float3 color) {
+    return max(color.r, max(color.g, color.b));  
+}
+
 // https://docs.unity3d.com/Packages/com.unity.shadergraph@6.9/manual/White-Balance-Node.html
 float3 WhiteBalance(float3 col, float temp, float tint) {
     float t1 = temp * 10.0f / 6.0f;
