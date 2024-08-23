@@ -38,7 +38,7 @@ uniform float _ProjectionFar <
     ui_type = "slider";
 > = 1000.0f;
 
-float3 FogPass(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target
+float3 PS_Fog(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target
 {
 	float3 color = tex2D(ReShade::BackBuffer, texcoord).rgb;
     float depth = ReShade::GetLinearizedDepth(texcoord);
@@ -64,11 +64,11 @@ float3 FogPass(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_T
 	return color;
 }
 
-technique Bean_FogPass
+technique Bean_Fog
 {
 	pass
 	{
 		VertexShader = PostProcessVS;
-		PixelShader = FogPass;
+		PixelShader = PS_Fog;
 	}
 }

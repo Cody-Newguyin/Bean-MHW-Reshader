@@ -40,7 +40,7 @@ uniform float3 _Saturation <
     ui_type = "drag";
 > = 1.0f;
 
-float3 ColorCorrectPass(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target
+float3 PS_ColorCorrect(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target
 {
 	float3 color = tex2D(ReShade::BackBuffer, texcoord).rgb;
 
@@ -56,11 +56,11 @@ float3 ColorCorrectPass(float4 position : SV_Position, float2 texcoord : TexCoor
 	return color;
 }
 
-technique Bean_ColorCorrectPass
+technique Bean_ColorCorrect
 {
 	pass
 	{
 		VertexShader = PostProcessVS;
-		PixelShader = ColorCorrectPass;
+		PixelShader = PS_ColorCorrect;
 	}
 }

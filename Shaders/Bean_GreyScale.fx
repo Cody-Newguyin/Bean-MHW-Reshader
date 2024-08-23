@@ -9,7 +9,7 @@ uniform int _GreyScaleMode <
                 "Digital\0";
 > = 0;
 
-float3 GreyScalePass(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target
+float3 PS_GreyScale(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_Target
 {
 	float3 color = tex2D(ReShade::BackBuffer, texcoord).rgb;
 
@@ -24,11 +24,11 @@ float3 GreyScalePass(float4 position : SV_Position, float2 texcoord : TexCoord) 
 	return color;
 }
 
-technique Bean_GreyScalePass
+technique Bean_GreyScale
 {
 	pass
 	{
 		VertexShader = PostProcessVS;
-		PixelShader = GreyScalePass;
+		PixelShader = PS_GreyScale;
 	}
 }
