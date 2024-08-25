@@ -70,6 +70,12 @@ uniform bool _Debug <
     ui_tooltip = "Show values in prefiltered";
 > = false;
 
+texture2D HalfTex {
+    Width = BUFFER_WIDTH / 2;
+    Height = BUFFER_HEIGHT / 2;
+
+    Format = RGBA16F;
+}; sampler2D Half { Texture = HalfTex; };
 
 texture2D QuarterTex {
     Width = BUFFER_WIDTH / 4;
