@@ -13,7 +13,6 @@ uniform int _SampleMode <
                "Box13\0";
 > = 0;
 
-
 uniform int _BlendMode <
     ui_type = "combo";
     ui_label = "Blend mode";
@@ -71,13 +70,6 @@ uniform bool _Debug <
     ui_tooltip = "Show values in prefiltered";
 > = false;
 
-texture2D HalfTex {
-    Width = BUFFER_WIDTH / 2;
-    Height = BUFFER_HEIGHT / 2;
-
-    Format = RGBA16F;
-}; sampler2D Half { Texture = HalfTex; };
-storage2D s_Half { Texture = HalfTex; };
 
 texture2D QuarterTex {
     Width = BUFFER_WIDTH / 4;

@@ -28,7 +28,14 @@ technique Bean_GreyScale
 {
 	pass
 	{
+		RenderTarget = Common::BeanBufferTexTemp;
 		VertexShader = PostProcessVS;
 		PixelShader = PS_GreyScale;
+	}
+	pass
+	{
+		RenderTarget = Common::BeanBufferTex;
+		VertexShader = PostProcessVS;
+		PixelShader = Common::PS_EndPass;
 	}
 }

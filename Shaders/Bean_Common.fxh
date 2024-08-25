@@ -1,5 +1,8 @@
 #pragma once
 
+#define PI (3.1415926535897932384626433832795)
+#define HALF_PI (1.5707963267948966192313216916398)
+
 namespace Common {
 
 // Shaders should set render target to BeanBufferTex and add PS_EndPass to the end
