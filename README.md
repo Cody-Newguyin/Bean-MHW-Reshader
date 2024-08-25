@@ -7,3 +7,9 @@ A post processing pipeline for Monster Hunter World based on Acreola's [AcerolaF
 3. Download this repo and copy files to /reshade-shaders
 4. Set RESHADE_DEPTH_INPUT_IS_REVERSED to 1 in global preprocessor defintions
 5. Enjoy!
+
+# References
+- https://github.com/GarrettGunnell/AcerolaFX
+- https://github.com/crosire/reshade-shaders
+- https://github.com/GameTechDev/XeGTAO
+- https://bruop.github.io/exposure/
