@@ -1,6 +1,9 @@
 # Bean MHW Reshader
 A post processing pipeline for Monster Hunter World based on Acreola's [AcerolaFX](https://github.com/GarrettGunnell/AcerolaFX). 
 
+# Examples
+Imageslider - https://imgsli.com/MjkxMTI1
+
 # Install
 1. Install [Reshade](https://reshade.me/) for MHW
 2. Install [MHW Reshade Injector](https://www.nexusmods.com/monsterhunterworld/mods/4869)
