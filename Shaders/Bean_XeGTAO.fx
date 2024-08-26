@@ -188,7 +188,10 @@ float PS_PreFilterDepths(float4 position : SV_Position, float2 texcoord : TexCoo
 void PS_Main(float4 position : SV_Position, float2 texcoord : TexCoord, out float edge : SV_Target0, out float aoTerm : SV_Target1)
 {
     const float2 viewportPixelSize = float2(BUFFER_RCP_WIDTH, BUFFER_RCP_HEIGHT);
-    float4 valuesUL = tex2DgatherR(ViewSpaceDepth, texcoord);
+    // honestly no idea how this works bruh...
+    float2 normalizedScreenPos = (position.xy + 1.0f) * viewportPixelSize;
+    normalizedScreenPos = texcoord;
+    float4 valuesUL = tex2DgatherR(ViewSpaceDepth, position.xy * viewportPixelSize);
 
     float viewspaceZ = valuesUL.y;
 
@@ -209,11 +212,11 @@ void PS_Main(float4 position : SV_Position, float2 texcoord : TexCoord, out floa
     float2 NDCToViewAdd = float2(CameraTanHalfFOV.x * -1.0f, CameraTanHalfFOV.y * 1.0f);
     float4 NDCToView = float4(NDCToViewMul, NDCToViewAdd);
 
-    float3 center = XeGTAO::ComputeViewspacePosition(texcoord, viewspaceZ, NDCToView);
-    float3 left   = XeGTAO::ComputeViewspacePosition(texcoord + float2(-1,  0) * viewportPixelSize, pixLZ, NDCToView);
-    float3 right  = XeGTAO::ComputeViewspacePosition(texcoord + float2( 1,  0) * viewportPixelSize, pixRZ, NDCToView);
-    float3 top    = XeGTAO::ComputeViewspacePosition(texcoord + float2( 0, -1) * viewportPixelSize, pixTZ, NDCToView);
-    float3 bottom = XeGTAO::ComputeViewspacePosition(texcoord + float2( 0,  1) * viewportPixelSize, pixBZ, NDCToView);
+    float3 center = XeGTAO::ComputeViewspacePosition(normalizedScreenPos, viewspaceZ, NDCToView);
+    float3 left   = XeGTAO::ComputeViewspacePosition(normalizedScreenPos + float2(-1,  0) * viewportPixelSize, pixLZ, NDCToView);
+    float3 right  = XeGTAO::ComputeViewspacePosition(normalizedScreenPos + float2( 1,  0) * viewportPixelSize, pixRZ, NDCToView);
+    float3 top    = XeGTAO::ComputeViewspacePosition(normalizedScreenPos + float2( 0, -1) * viewportPixelSize, pixTZ, NDCToView);
+    float3 bottom = XeGTAO::ComputeViewspacePosition(normalizedScreenPos + float2( 0,  1) * viewportPixelSize, pixBZ, NDCToView);
     float3 viewspaceNormal = XeGTAO::CalculateNormal(edgesLRTB, center, left, right, top, bottom);
 
     viewspaceZ *= 0.99999;
@@ -295,11 +298,11 @@ void PS_Main(float4 position : SV_Position, float2 texcoord : TexCoord, out floa
 
             sampleOffset = round(sampleOffset) * viewportPixelSize;
 
-            float2 sampleScreenPos0 = texcoord + sampleOffset;
+            float2 sampleScreenPos0 = normalizedScreenPos + sampleOffset;
             float SZ0 = tex2Dfetch(ViewSpaceDepth, sampleScreenPos0 * float2(BUFFER_WIDTH, BUFFER_HEIGHT)).r;
             float3 samplePos0 = XeGTAO::ComputeViewspacePosition(sampleScreenPos0, SZ0, NDCToView);
 
-            float2 sampleScreenPos1 = texcoord - sampleOffset;
+            float2 sampleScreenPos1 = normalizedScreenPos - sampleOffset;
             float SZ1 = tex2Dfetch(ViewSpaceDepth, sampleScreenPos1 * float2(BUFFER_WIDTH, BUFFER_HEIGHT)).r;
             float3 samplePos1 = XeGTAO::ComputeViewspacePosition(sampleScreenPos1, SZ1, NDCToView);
 
@@ -353,10 +356,9 @@ void AddSample(float4 ssaoValue, float edgeValue, inout float4 sum, inout float 
     sumWeight += weight;
 }
 
-
 void CS_Denoise(uint2 tid : SV_DISPATCHTHREADID) {
     const float2 viewportPixelSize = float2(BUFFER_RCP_WIDTH, BUFFER_RCP_HEIGHT);
-    const uint2 pixCoordBase = tid * uint2(2, 1);
+    const uint2 pixCoordBase = (tid) * uint2(2, 1);
 
     bool finalApply = true;
 
@@ -483,6 +485,7 @@ float4 PS_XeGTAO(float4 position : SV_Position, float2 texcoord : TexCoord) : SV
     float3 output = max(visibility, ((visibility * a + b) * visibility + c) * visibility);
 
     color = color * output;
+    // float3 test = float3(visibility, visibility, visibility);
 	return float4(color, pixel.a);
 }
 
