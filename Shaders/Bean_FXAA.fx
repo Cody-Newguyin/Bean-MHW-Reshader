@@ -87,20 +87,21 @@ float4 PS_FXAA(float4 position : SV_Position, float2 texcoord : TexCoord) : SV_T
     float2 edgeStep = texelSize - pixelStep;
     float oppositeLuminance = pLuminance;
     float gradient = pGradient;
-    // flip direction if positive side is darker
+    // Flip direction if positive side is darker
     if (pGradient < nGradient) {
         pixelStep = -pixelStep;
         oppositeLuminance = nLuminance;
         gradient = nGradient;
     }
     
-    // sample at edge between pixels
+    
     float2 uvEdge = texcoord + pixelStep * 0.5f;
     
     float edgeLuminance = (m + oppositeLuminance) * 0.5f;
     float gradientThreshold = gradient * 0.25f;
-
-    // moving the first check inside the loop is probably a missed optimization but whatever
+    
+    // Continously sample between pixels along an edge to find length of the edge
+    // Moving the first check inside the loop is probably a missed optimization but whatever
     float2 puv = uvEdge;
     float pLuminanceDelta;
     bool pAtEnd = false;
