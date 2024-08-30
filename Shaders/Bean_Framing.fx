@@ -38,7 +38,6 @@ uniform float _Theta <
     ui_step = 0.5f;
 > = 0;
 
-
 uniform float _DepthCutoff <
     ui_min = 0f; ui_max = 1.0f;
     ui_type = "drag";
