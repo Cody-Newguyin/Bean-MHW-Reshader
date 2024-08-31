@@ -68,7 +68,14 @@ technique Bean_Fog
 {
 	pass
 	{
+		RenderTarget = Common::BeanBufferTexTemp;
 		VertexShader = PostProcessVS;
 		PixelShader = PS_Fog;
+	}
+	pass
+	{
+		RenderTarget = Common::BeanBufferTex;
+		VertexShader = PostProcessVS;
+		PixelShader = Common::PS_EndPass;
 	}
 }
