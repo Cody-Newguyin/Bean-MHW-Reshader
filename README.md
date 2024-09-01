@@ -2,7 +2,7 @@
 A post processing pipeline for Monster Hunter World based on Acreola's [AcerolaFX](https://github.com/GarrettGunnell/AcerolaFX). 
 
 # Examples
-Imageslider - https://imgsli.com/MjkxMTI1
+![example1](./Examples/example1.png)
 
 # Install
 1. Install [Reshade](https://reshade.me/) for MHW
@@ -16,3 +16,4 @@ Imageslider - https://imgsli.com/MjkxMTI1
 - https://github.com/crosire/reshade-shaders
 - https://github.com/GameTechDev/XeGTAO
 - https://bruop.github.io/exposure/
+- https://catlikecoding.com/unity/tutorials/advanced-rendering/
